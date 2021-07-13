@@ -1,0 +1,28 @@
+@import "./vars";
+
+@mixin scrollbar($width: false, $height: false, $hover: #12c2e9, $background: rgba(black, 0.3)) {
+	@if $width {
+		&::-webkit-scrollbar {
+			width: $width;
+		}
+	}
+	@if $height {
+		&::-webkit-scrollbar {
+			height: $height;
+		}
+	}
+	&::-webkit-scrollbar-thumb {
+		background-color: $background;
+		&:hover {
+			background-color: $hover;
+		}
+	}
+}
+
+@mixin on($name) {
+	@media (min-width: map-get(
+    $breakpoints-up , $name
+   )) {
+		@content;
+	}
+}
