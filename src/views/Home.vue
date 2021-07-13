@@ -55,7 +55,10 @@
 				:position="record.latLng"
 				v-for="record in recordsInsideCircle"
 				@click="onClickRecordMarker(record)"
-				:icon="require(`@/assets/svg/${record.category.toLowerCase()}-marker.svg`)"
+				:icon="record.isInside
+					? require(`@/assets/svg/${record.category.toLowerCase()}-marker.svg`)
+					: require(`@/assets/svg/black-marker.svg`)
+				"
 			/>
 		</gmap-map>
 
@@ -92,7 +95,7 @@
 			</div>
 		</Menu>
 
-		<div class="tw-absolute tw-bottom-4 tw-w-11 tw-right-3">
+		<div class="tw-absolute tw-bottom-20 tw-w-11 tw-left-3">
 			<button
 				@click="circle.draggable = !circle.draggable"
 				class="tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-xl"
@@ -106,26 +109,31 @@
 			>
 				<b-icon icon="geo-alt"></b-icon>
 			</button>
+		</div>
+
+		<div class="tw-absolute tw-bottom-20 tw-w-11 tw-right-3">
 			<div class="tw-w-11 tw-rounded-md tw-overflow-hidden tw-shadow-md tw-mt-2">
 				<button
 					@click="zoom > 1 && (zoom -= 1)"
-					class="tw-h-11 tw-w-11 tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-grid tw-place-items-center tw-text-2xl"
+					class="tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-2xl"
 				>
 					<b-icon icon="dash"></b-icon>
 				</button>
-				<hr class="tw-m-0 tw-border-gray-100" />
 				<button
 					@click="zoom < 24 && (zoom += 1)"
-					class="tw-h-11 tw-w-11 tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-grid tw-place-items-center tw-text-2xl"
+					class="tw-mt-2 tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-2xl"
 				>
 					<b-icon icon="plus"></b-icon>
 				</button>
 			</div>
+		</div>
+
+		<div class="tw-absolute tw-inset-x-3 tw-bottom-5 tw-flex tw-justify-center tw-space-x-3">
 			<button
 				size="sm"
 				variant="danger"
 				v-b-modal.modal-record-building
-				class="tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-bg-red-500 tw-opacity-80 tw-text-white tw-mt-2 tw-shadow-md tw-grid tw-place-items-center"
+				class="tw-whitespace-nowrap tw-flex-none tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-bg-red-500 tw-opacity-80 tw-text-white tw-shadow-md tw-grid tw-place-items-center"
 			>
 				<svg height="24" width="24" class="tw-transform tw-scale-75">
 					<path d="M0 0h24v24H0V0z" fill="none" />
@@ -134,15 +142,13 @@
 						d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0013 3.06V1h-2v2.06A8.994 8.994 0 003.06 11H1v2h2.06A8.994 8.994 0 0011 20.94V23h2v-2.06A8.994 8.994 0 0020.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"
 					/>
 				</svg>
-				<!-- <span>Record</span> -->
 			</button>
+			<div
+				class="tw-text-sm tw-bg-blue-500 tw-flex tw-items-center tw-whitespace-nowrap tw-bg-opacity-80 tw-text-white tw-px-3 tw-rounded tw-shadow"
+			>Total crime points in radius = {{totalPointsInsideCircle}}</div>
 		</div>
 
 		<CreateRecordDialog :createRecord="onCreateRecord" />
-
-		<div
-			class="tw-absolute tw-left-3 tw-text-sm tw-bottom-4 tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-p-2 tw-rounded tw-shadow tw-w-1/2"
-		>Total Points for Buildings in Scanned Area = {{totalPointsInsideCircle}}</div>
 	</div>
 </template>
 
@@ -181,9 +187,9 @@ export default {
 
 		// NUMBERS
 		zoom: 15,
-		radius: 500,
-		initialZoom: 15,
-		initialRadius: 500,
+		radius: 2000,
+		initialZoom: 14,
+		initialRadius: 2000,
 
 		// ARRAYS
 		markers: [],
@@ -214,6 +220,8 @@ export default {
 		},
 	}),
 	created() {
+		this.zoom = this.initialZoom
+		this.radius = this.initialRadius
 		this.updateMyLocation({ updateCircle: true })
 		this.myLocationInterval = setInterval(() => {
 			this.updateMyLocation()
@@ -231,18 +239,22 @@ export default {
 	computed: {
 		...mapGetters('Auth', ['$user']),
 		...mapGetters('Records', ['$records']),
+		isAdmin() {
+			return this.$user.role === 'admin'
+		},
 		totalPointsInsideCircle() {
 			return this.recordsInsideCircle.reduce(
 				(total, rec) => total + rec.points, 0
 			)
 		},
 		recordsInsideCircle() {
-			return this.$records.filter(rec =>
-				this.isInsideCircle(
+			// return this.$records
+			return this.$records.map(rec => ({
+				...rec, isInside: this.isInsideCircle(
 					this.circle.location,
 					rec.latLng, this.radius
 				)
-			)
+			}))
 		}
 	},
 	methods: {
@@ -324,17 +336,40 @@ export default {
 		},
 		createRecordInfoWindow(rec) {
 			const div = document.createElement('div')
-			const btn = document.createElement('button')
 
-			btn.innerText = 'Delete'
-			btn.style.cssText = `padding: 2px 8px`
-			btn.classList.add('btn', 'btn-danger', 'btn-sm', 'm-1', 'mt-2')
-			btn.addEventListener('click', async () => {
-				await this.deleteRecord(only(rec, ['id', 'ref']))
-				this.hideInfo()
-			})
+			let btn
+			const canDelete = this.isAdmin || this.$user.id === rec.userId
+			if (canDelete) {
+				// Delete button
+				btn = document.createElement('button')
+				btn.innerText = 'Delete'
+				btn.style.cssText = `padding: 2px 8px`
+				btn.classList.add('btn', 'btn-danger', 'btn-sm', 'm-1')
+				btn.addEventListener('click', async () => {
+					await this.deleteRecord(only(rec, ['id', 'ref']))
+					this.hideInfo()
+				})
+			}
 
-			div.innerHTML = `
+			// Wrapper
+			const wrapper = document.createElement('div')
+			wrapper.classList.add('mt-2', 'tw-flex', 'tw-space-x-2')
+			canDelete && wrapper.appendChild(btn)
+
+			if (this.isAdmin) {
+				// Approve button
+				const approveButton = document.createElement('button')
+				approveButton.innerText = 'Approve'
+				approveButton.style.cssText = `padding: 2px 8px`
+				approveButton.classList.add('btn', 'btn-primary', 'btn-sm', 'm-1')
+				approveButton.addEventListener('click', async () => {
+					console.log('Approve Crime', rec.id)
+					this.hideInfo()
+				})
+				wrapper.appendChild(approveButton)
+			}
+
+			if (rec.isInside) div.innerHTML = `
 				<div>Category: <strong>${rec.category}</strong></div>
 				<div>${rec.category} Type: <strong>${rec.buildingType}</strong></div>
 				<div>Points: <strong>${rec.points}</strong></div>
@@ -344,7 +379,9 @@ export default {
 				<div>Website: <strong>${rec.website}</strong></div>
 				<div>Date of capture: <strong>${new Date(rec.createdAt).toLocaleString()}</strong></div>
 			`
-			div.appendChild(btn)
+			else div.innerHTML = `Please drag circle here to see to see details of this crime`
+
+			if (rec.isInside && (this.isAdmin || canDelete)) div.appendChild(wrapper)
 			return div
 		}
 	}
