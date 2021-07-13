@@ -32,15 +32,21 @@
 					</div>
 					<br />
 					<div class="form-group">
-						<label for>Age</label>
+						<label for>Email</label>
 						<input
 							required
-							type="text"
-							v-model="user.age"
+							type="email"
+							v-model="user.email"
 							class="form-control"
-							placeholder="Age"
+							placeholder="Email address"
 							:disabled="!update"
 						/>
+					</div>
+					<br />
+					<div class="form-group">
+						<label for>Date of Birth</label>
+						<b-form-datepicker required locale="en" :disabled="!update" v-model="user.dob"></b-form-datepicker>
+						<!-- min="2010-07-01" -->
 					</div>
 					<br />
 					<div class="form-group">
@@ -106,6 +112,7 @@ export default {
 				name: '',
 				age: '',
 				gender: '',
+				dob: '',
 				phoneNumber: '',
 				homeAddress: '',
 			},
@@ -130,11 +137,14 @@ export default {
 		...mapActions('Auth', ['signOutUser', 'updateProfile']),
 		async updateProfileDetails() {
 			this.processing = true
-
-			await this.updateProfile([this.$user.id, only(this.user, [
-				'name', 'age', 'gender', 'phoneNumber', 'homeAddress'
-			])])
-
+			await this.updateProfile([
+				this.$user.id,
+				only(this.user, [
+					'name', 'age', 'dob', 'email',
+					'gender', 'phoneNumber', 'homeAddress'
+				])
+			])
+			this.update = false
 			this.processing = false
 			alert("Profile details saved.")
 		},
