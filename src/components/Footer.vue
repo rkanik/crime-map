@@ -30,6 +30,17 @@
 				/>
 			</svg>
 		</router-link>
+		<div class="tw-w-16">
+			<button
+				class="tw-w-16 tw-h-16 tw-rounded-full tw-overflow-hidden tw-transform tw--translate-y-4 tw-scale-90"
+			>
+				<img
+					alt="sos button"
+					src="@/assets/img/sos.jpg"
+					class="tw-h-full tw-w-full tw-transform tw-scale-110"
+				/>
+			</button>
+		</div>
 		<router-link
 			:to="{ name: 'Profile' }"
 			class="tw-h-12 tw-flex-1 tw-grid tw-place-items-center"
