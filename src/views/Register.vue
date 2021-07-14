@@ -75,6 +75,7 @@ export default {
 				gender: '',
 				phoneNumber: '',
 				email: '',
+				role: 'user',
 				homeAddress: '',
 				password: '',
 			},

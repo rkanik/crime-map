@@ -10,3 +10,21 @@ export const _firebaseConfig = {
 	appId: process.env.VUE_APP_FB_APP_ID,
 	measurementId: process.env.VUE_APP_FB_MEASUREMENT_ID,
 }
+export const _crime = {
+	rough: 2,
+	violent: 1,
+	nonViolent: 3
+}
+export const _time = (() => {
+	let sec = 1000
+	let min = sec * 60
+	let hour = min * 60
+	let day = hour * 24
+	let week = day * 7
+	let month = day * 30
+	let year = day * 365
+	return {
+		sec, min, hour,
+		day, week, month, year
+	}
+})()

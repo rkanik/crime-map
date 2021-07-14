@@ -53,11 +53,13 @@
 				:clickable="true"
 				:key="record.id"
 				:position="record.latLng"
-				v-for="record in recordsInsideCircle"
+				v-for="record in mappedCrimes"
 				@click="onClickRecordMarker(record)"
-				:icon="record.isInside
-					? require(`@/assets/svg/${record.category.toLowerCase()}-marker.svg`)
-					: require(`@/assets/svg/black-marker.svg`)
+				:icon="record.confirmedBy
+					? (record.isInside
+						? require(`@/assets/svg/${record.crime.id}-marker.svg`)
+						:	require(`@/assets/svg/black-marker.svg`)
+					) : require(`@/assets/svg/not-confirmed.svg`)
 				"
 			/>
 		</gmap-map>
@@ -96,9 +98,25 @@
 		</Menu>
 
 		<div class="tw-absolute tw-bottom-20 tw-w-11 tw-left-3">
+			<Menu v-if="psi" v-model="psiMenu" contentClass="tw-left-full tw-bottom-full">
+				<template #toggler="{on}">
+					<button
+						v-on="on"
+						class="tw-h-12 tw-w-12 tw-grid tw-place-items-center tw-rounded-md tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-shadow-md"
+					>PSI</button>
+				</template>
+				<div class="tw-w-52 tw-bg-white tw-px-2 tw-py-1 tw-rounded">
+					<div class="tw-bg-white tw-p-2 tw-text-sm">
+						<div :key="i" v-for="(p,i) in psi">
+							{{p.category}}:
+							<span class="tw-font-medium">{{p.psi}}</span>
+						</div>
+					</div>
+				</div>
+			</Menu>
 			<button
 				@click="circle.draggable = !circle.draggable"
-				class="tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-xl"
+				class="tw-mt-2 tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-xl"
 				:class="[circle.draggable?'tw-bg-blue-500':'tw-bg-gray-600']"
 			>
 				<b-icon icon="arrows-move"></b-icon>
@@ -132,7 +150,7 @@
 			<button
 				size="sm"
 				variant="danger"
-				v-b-modal.modal-record-building
+				v-b-modal.modal-record-crime
 				class="tw-whitespace-nowrap tw-flex-none tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-bg-red-500 tw-opacity-80 tw-text-white tw-shadow-md tw-grid tw-place-items-center"
 			>
 				<svg height="24" width="24" class="tw-transform tw-scale-75">
@@ -145,7 +163,7 @@
 			</button>
 			<div
 				class="tw-text-sm tw-bg-blue-500 tw-flex tw-items-center tw-whitespace-nowrap tw-bg-opacity-80 tw-text-white tw-px-3 tw-rounded tw-shadow"
-			>Total crime points in radius = {{totalPointsInsideCircle}}</div>
+			>Total crime points in radius = {{pointsInsideCircle}}</div>
 		</div>
 
 		<CreateRecordDialog :createRecord="onCreateRecord" />
@@ -160,7 +178,10 @@ import CreateRecordDialog from '@/components/CreateRecordDialog'
 import MapTypes from '../components/MapTypes.vue'
 import Menu from '../components/utils/Menu.vue'
 import { only } from '../helpers'
+import { _time } from '../consts'
+import crimes from '@/data.json'
 
+const initialZoom = 13, initialRadius = 2000
 const iLatLng = () => ({ lat: 0, lng: 0 })
 
 export default {
@@ -175,21 +196,21 @@ export default {
 	data: () => ({
 		// NULLS
 		map: null,
+
 		infoWindow: null,
 		currentMarker: null,
 		myLocationInterval: null,
 
 		// BOOLEANS
 		radiusMenu: false,
+		psiMenu: false,
 
 		// STRINGS
 		mapType: 'terrain',
 
 		// NUMBERS
-		zoom: 15,
-		radius: 2000,
-		initialZoom: 14,
-		initialRadius: 2000,
+		zoom: initialZoom,
+		radius: initialRadius,
 
 		// ARRAYS
 		markers: [],
@@ -220,8 +241,6 @@ export default {
 		},
 	}),
 	created() {
-		this.zoom = this.initialZoom
-		this.radius = this.initialRadius
 		this.updateMyLocation({ updateCircle: true })
 		this.myLocationInterval = setInterval(() => {
 			this.updateMyLocation()
@@ -242,13 +261,34 @@ export default {
 		isAdmin() {
 			return this.$user.role === 'admin'
 		},
-		totalPointsInsideCircle() {
-			return this.recordsInsideCircle.reduce(
-				(total, rec) => total + rec.points, 0
-			)
+		psi() {
+			if (this.radius !== 2000) return null
+			let cats = this.insideCrimes
+				.filter(crm => (+crm.createdAt + _time.month) > Date.now())
+				.reduce((cats, crm) => {
+					cats[crm.crime.id] += 1
+					return cats
+				}, { 1: 0, 2: 0, 3: 0 })
+
+			cats = Object.entries(cats).map(([id, count]) => {
+				let crime = crimes.find(c => c.id == id)
+				return {
+					category: `PSI-${crime.category[0].toUpperCase()} (${crime.category.split(' ')[0]})`,
+					psi: (count / this.getTotalPointsOf(id)).toFixed(2)
+				}
+			})
+
+			return cats
 		},
-		recordsInsideCircle() {
-			// return this.$records
+		pointsInsideCircle() {
+			return this.insideCrimes
+				.reduce((total, rec) => total + rec.crime.points, 0)
+		},
+		insideCrimes() {
+			return this.mappedCrimes
+				.filter(crime => crime.isInside)
+		},
+		mappedCrimes() {
 			return this.$records.map(rec => ({
 				...rec, isInside: this.isInsideCircle(
 					this.circle.location,
@@ -258,21 +298,35 @@ export default {
 		}
 	},
 	methods: {
-		...mapActions('Records', ['createRecord', 'deleteRecord']),
+		...mapActions('Records', [
+			'createRecord',
+			'deleteRecord',
+			'updateCrime'
+		]),
 		async onCreateRecord(record) {
 			let res = await this.createRecord({
-				...record, userId: this.$user.id,
+				...record,
+				recordedBy: this.$user.id,
 				latLng: this.circle.location,
+				possibleDuplication: false,
+				confirmedAt: this.isAdmin ? Date.now() : null,
+				confirmedBy: this.isAdmin ? this.$user.id : null,
 				createdAt: Date.now(),
-				updatedAt: Date.now()
+				updatedAt: Date.now(),
 			})
 			return res
 		},
+		getTotalPointsOf(categoryId) {
+			return crimes
+				.find(cat => cat.id == categoryId).crimes
+				.reduce((total, crime) => total + crime.points, 0)
+		},
 		hideInfo() {
 			this.infoWindow.close()
+			this.radiusMenu = false
+			this.psiMenu = false
 		},
 		onClickRecordMarker(record) {
-
 			this.infoWindow.setContent(
 				this.createRecordInfoWindow(record)
 			);
@@ -297,27 +351,24 @@ export default {
 
 			this.circle.dot = true
 
-			this.zoom = this.initialZoom
+			this.zoom = initialZoom
 			this.map.setZoom(this.zoom)
 
 			this.map.panTo(latLng);
 
-			this.radius = this.initialRadius
+			this.radius = initialRadius
 			this.circle.location = { ...latLng }
 			this.mapCenter = { ...latLng }
 			this.hideInfo()
 		},
-		onDragCircle(e) {
-			this.circle.location = this.latLngToNumber(e.latLng)
-		},
 		onClickCurrentLocation() {
 			this.circle.dot = false
-			this.zoom = this.initialZoom
+			this.zoom = initialZoom
 
 			this.map.panTo(this.myLocation);
-			this.map.setZoom(this.initialZoom)
+			this.map.setZoom(initialZoom)
 
-			this.radius = this.initialRadius
+			this.radius = initialRadius
 
 			this.mapCenter = { ...this.myLocation }
 			this.circle.location = { ...this.myLocation }
@@ -337,8 +388,8 @@ export default {
 		createRecordInfoWindow(rec) {
 			const div = document.createElement('div')
 
-			let btn
-			const canDelete = this.isAdmin || this.$user.id === rec.userId
+			let btn, notConfirmed
+			const canDelete = this.isAdmin || this.$user.id === rec.recordedBy
 			if (canDelete) {
 				// Delete button
 				btn = document.createElement('button')
@@ -350,36 +401,50 @@ export default {
 					this.hideInfo()
 				})
 			}
+			if (this.$user.id === rec.recordedBy && !rec.confirmedBy) {
+				notConfirmed = `
+					<p class='tw-text-sm tw-text-red-500 tw-ml-3 tw-mb-0 tw-leading-9'>Not confirmed yet</p>
+				`
+			}
 
 			// Wrapper
 			const wrapper = document.createElement('div')
 			wrapper.classList.add('mt-2', 'tw-flex', 'tw-space-x-2')
-			canDelete && wrapper.appendChild(btn)
 
-			if (this.isAdmin) {
+			if (this.isAdmin && !rec.confirmedBy) {
 				// Approve button
 				const approveButton = document.createElement('button')
 				approveButton.innerText = 'Approve'
 				approveButton.style.cssText = `padding: 2px 8px`
 				approveButton.classList.add('btn', 'btn-primary', 'btn-sm', 'm-1')
 				approveButton.addEventListener('click', async () => {
-					console.log('Approve Crime', rec.id)
-					this.hideInfo()
+					const update = {
+						updatedAt: Date.now(),
+						confirmedAt: Date.now(),
+						confirmedBy: this.$user.id,
+					}
+					await rec.ref.update(update)
+					this.onClickRecordMarker({ ...rec, ...update })
 				})
 				wrapper.appendChild(approveButton)
 			}
 
+			canDelete && wrapper.appendChild(btn)
+			notConfirmed && (wrapper.innerHTML += notConfirmed)
+
 			if (rec.isInside) div.innerHTML = `
-				<div>Category: <strong>${rec.category}</strong></div>
-				<div>${rec.category} Type: <strong>${rec.buildingType}</strong></div>
-				<div>Points: <strong>${rec.points}</strong></div>
-				<div>Confidence in this building: <strong>${rec.buildingConfidence}</strong></div>
-				<div>Confidence in this location: <strong>${rec.locationConfidence}</strong></div>
-				<div>DateTime: <strong>${rec.visitedAt}</strong></div>
-				<div>Website: <strong>${rec.website}</strong></div>
-				<div>Date of capture: <strong>${new Date(rec.createdAt).toLocaleString()}</strong></div>
+				<div>Category: <strong>${rec.crime.category}</strong></div>
+				<div>Type of crime: <strong>${rec.crime.type}</strong></div>
+				<div>Crime points: <strong>${rec.crime.points}</strong></div>
+				<div>Confidence in this crime event: <strong>${rec.crimeConfidence}</strong></div>
+				<div>Confidence in crime location: <strong>${rec.locationConfidence}</strong></div>
+				<div>When did this crime happen?: <strong>${new Date(rec.createdAt).toLocaleString()}</strong></div>
+				<div>Website link: <strong>${rec.website}</strong></div>
 			`
-			else div.innerHTML = `Please drag circle here to see to see details of this crime`
+			else div.innerHTML = `
+				${!rec.confirmedBy ? "<div class='tw-text-sm tw-text-red-500 tw-mb-0'>Not confirmed yet</div>" : ""}
+				<div>Please drag circle here to ${this.isAdmin ? "review this crime" : "see details of this crime"}</div>
+			`
 
 			if (rec.isInside && (this.isAdmin || canDelete)) div.appendChild(wrapper)
 			return div

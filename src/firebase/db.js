@@ -28,8 +28,11 @@ const addBuildingRecord = record => handle(
 )
 
 const getBuildingRecords = conditions => {
+	let query = conditions
+		? Buildings.where(...conditions)
+		: Buildings
 	return handle(
-		Buildings.where(...conditions).get(), snapShot => {
+		query.get(), snapShot => {
 			if (snapShot.empty) return
 			let records = []
 			snapShot.forEach(doc => {
