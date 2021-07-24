@@ -27,6 +27,7 @@ export default {
 	created() {
 		this.loading = true
 		Auth.onStateChanged(user => {
+			console.log('onStateChanged', user)
 
 			this.$store.commit('Auth/SET', {
 				user: user ? user : { id: null },

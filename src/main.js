@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import VueApexCharts from 'vue-apexcharts'
 
 // Stylesheets
 import './assets/css/tailwind.css'
@@ -22,6 +23,7 @@ import * as VueGoogleMaps from 'vue2-google-maps'
 // Plugins
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
+Vue.use(VueApexCharts)
 Vue.use(VueGoogleMaps, {
   load: {
     key: _googleMapApiKey,
@@ -29,6 +31,10 @@ Vue.use(VueGoogleMaps, {
   }
 })
 
+// Components
+Vue.component('apexchart', VueApexCharts)
+
+// Config
 Vue.config.productionTip = false
 
 new Vue({

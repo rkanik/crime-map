@@ -31,7 +31,7 @@
 				@click="hideInfo"
 				:center="circle.location"
 				:draggable="circle.draggable"
-				@dragstart="hideInfo(),(circle.dot = true)"
+				@dragstart="onCircleDragStart"
 				:options="{
 					strokeColor:'#2196f3', strokeOpacity:'1',
 					strokeWeight:'2', fillColor:'#2196f3', fillOpacity:'0.25',
@@ -115,7 +115,7 @@
 				</div>
 			</Menu>
 			<button
-				@click="circle.draggable = !circle.draggable"
+				@click="toggleCircleDraggable"
 				class="tw-mt-2 tw-bg-opacity-80 tw-text-white tw-h-11 tw-w-11 tw-rounded-md tw-transition-all tw-shadow-md tw-grid tw-place-items-center tw-text-xl"
 				:class="[circle.draggable?'tw-bg-blue-500':'tw-bg-gray-600']"
 			>
@@ -181,7 +181,7 @@ import { only } from '../helpers'
 import { _time } from '../consts'
 import crimes from '@/data.json'
 
-const initialZoom = 13, initialRadius = 2000
+const initialZoom = 13
 const iLatLng = () => ({ lat: 0, lng: 0 })
 
 export default {
@@ -210,7 +210,6 @@ export default {
 
 		// NUMBERS
 		zoom: initialZoom,
-		radius: initialRadius,
 
 		// ARRAYS
 		markers: [],
@@ -231,11 +230,6 @@ export default {
 		// OBJECTS
 		myLocation: iLatLng(),
 		mapCenter: iLatLng(),
-		circle: {
-			dot: false,
-			draggable: false,
-			location: iLatLng()
-		},
 		dialogs: {
 			search: false
 		},
@@ -258,6 +252,15 @@ export default {
 	computed: {
 		...mapGetters('Auth', ['$user']),
 		...mapGetters('Records', ['$records']),
+		...mapGetters('Map', ['$radius', '$circle']),
+		radius: {
+			get() { return this.$radius },
+			set(v) { this.setRadius(v) }
+		},
+		circle: {
+			get() { return this.$circle },
+			set(v) { this.setCircle(v) }
+		},
 		isAdmin() {
 			return this.$user.role === 'admin'
 		},
@@ -266,7 +269,7 @@ export default {
 			let cats = this.insideCrimes
 				.filter(crm => (+crm.createdAt + _time.month) > Date.now())
 				.reduce((cats, crm) => {
-					cats[crm.crime.id] += 1
+					cats[crm.crime.id] += crm.crime.points
 					return cats
 				}, { 1: 0, 2: 0, 3: 0 })
 
@@ -298,6 +301,11 @@ export default {
 		}
 	},
 	methods: {
+		...mapActions('Map', [
+			'setCircle',
+			'setRadius',
+			'resetRadius',
+		]),
 		...mapActions('Records', [
 			'createRecord',
 			'deleteRecord',
@@ -315,6 +323,19 @@ export default {
 				updatedAt: Date.now(),
 			})
 			return res
+		},
+		toggleCircleDraggable() {
+			this.circle = {
+				...this.circle,
+				draggable: !this.circle.draggable
+			}
+		},
+		onCircleDragStart() {
+			this.hideInfo()
+			this.circle = {
+				...this.circle,
+				dot: true
+			}
 		},
 		getTotalPointsOf(categoryId) {
 			return crimes
@@ -349,29 +370,34 @@ export default {
 		onSelectPlace(e) {
 			const latLng = this.latLngToNumber(e)
 
-			this.circle.dot = true
 
 			this.zoom = initialZoom
 			this.map.setZoom(this.zoom)
 
 			this.map.panTo(latLng);
 
-			this.radius = initialRadius
-			this.circle.location = { ...latLng }
+			this.resetRadius()
+
+			this.circle = {
+				...this.circle, dot: true,
+				location: { ...latLng }
+			}
 			this.mapCenter = { ...latLng }
 			this.hideInfo()
 		},
 		onClickCurrentLocation() {
-			this.circle.dot = false
 			this.zoom = initialZoom
 
 			this.map.panTo(this.myLocation);
 			this.map.setZoom(initialZoom)
 
-			this.radius = initialRadius
+			this.resetRadius()
 
 			this.mapCenter = { ...this.myLocation }
-			this.circle.location = { ...this.myLocation }
+			this.circle = {
+				...this.circle, dot: false,
+				location: { ...this.myLocation }
+			}
 
 		},
 		updateMyLocation({ updateCircle = false } = {}) {
@@ -380,8 +406,12 @@ export default {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude,
 				}
-				if (updateCircle) this.mapCenter = this.circle.location = {
-					...this.myLocation
+				if (updateCircle) {
+					this.mapCenter = { ...this.myLocation }
+					this.circle = {
+						...this.circle,
+						location: this.myLocation
+					}
 				}
 			})
 		},

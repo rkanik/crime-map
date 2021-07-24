@@ -44,9 +44,9 @@ export default {
 				email: this.email,
 				password: this.password
 			})
-      console.log(err)
+			console.log(err)
 			if (err) this.error = err.message
-      this.processing = false
+			this.processing = false
 		}
 	}
 }

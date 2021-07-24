@@ -65,6 +65,11 @@ const router = new VueRouter({
           component: Listing
         },
         {
+          path: '/summary',
+          name: 'Summary',
+          component: () => import(`@/views/CrimeSummary.vue`)
+        },
+        {
           path: '/about',
           name: 'About',
           component: About

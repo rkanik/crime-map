@@ -17,9 +17,9 @@
 			</svg>
 		</router-link>
 		<router-link
-			:to="{ name: 'Listing' }"
+			:to="{ name: 'Summary' }"
 			class="tw-h-12 tw-flex-1 tw-grid tw-place-items-center"
-			:class="[$route.name === 'Listing'?'tw-bg-blue-500 tw-bg-opacity-20 tw-text-blue-500':'tw-bg-white tw-text-gray-600']"
+			:class="[$route.name === 'Summary'?'tw-bg-blue-500 tw-bg-opacity-20 tw-text-blue-500':'tw-bg-white tw-text-gray-600']"
 		>
 			<svg class="tw-h-6 tw-w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path
