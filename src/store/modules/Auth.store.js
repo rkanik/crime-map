@@ -4,7 +4,10 @@ import { createMutations, handle } from '../store.helpers'
 
 const initalState = () => ({
 	isAuth: false,
-	user: { id: null }
+	user: {
+		id: null,
+		role: null
+	}
 })
 
 const state = initalState()
@@ -13,6 +16,7 @@ const mutations = createMutations('SET', 'RESET')
 const getters = {
 	$user: ({ user }) => user,
 	$isAuth: ({ isAuth }) => isAuth,
+	$authRole: state => state.user.role,
 	$isSubscribed: state => (
 		state.user.role === 'admin' ||
 		state.user.isSubscribed === true

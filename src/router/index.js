@@ -95,11 +95,19 @@ const router = new VueRouter({
         {
           path: 'crimes',
           name: 'Crimes',
+          meta: {
+            requiresAuth: true,
+            requireRoles: ['admin']
+          },
           component: () => import(`@/views/dashboard/Crimes.vue`)
         },
         {
           path: 'users',
           name: 'Users',
+          meta: {
+            requiresAuth: true,
+            requireRoles: ['admin']
+          },
           component: () => import(`@/views/dashboard/Users.vue`)
         }
       ]
@@ -109,14 +117,21 @@ const router = new VueRouter({
 
 router.beforeEach((to, _, next) => {
   const isAuth = store.getters['Auth/$isAuth']
+  const authRole = store.getters['Auth/$authRole']
 
   // Redirect to login if not logged in
   const requiresAuth = to.matched.some(res => res.meta.requiresAuth)
   if (requiresAuth && !isAuth) return next({ name: 'Login' })
 
-  // Redirect to home if already logged on
-  const redirectIsAuth = to.matched.some(res => res.meta.redirectIsAuth)
-  if (redirectIsAuth && isAuth) return next({ name: 'Home' })
+  if (isAuth) {
+
+    // Redirect to home if already logged on
+    const redirectIsAuth = to.matched.some(res => res.meta.redirectIsAuth)
+    if (redirectIsAuth) return next({ name: 'Home' })
+
+    const requireRoles = to.matched.some(res => res.meta.requireRoles)
+    if (requireRoles && !to.meta.requireRoles.includes(authRole)) return next({ name: 'Home' })
+  }
 
   return next();
 })
