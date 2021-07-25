@@ -7,6 +7,15 @@
 			<RotateSquare3 size="64px" />
 		</div>
 		<router-view v-else class="tw-flex-1" />
+
+		<b-modal centered hide-footer hide-header v-model="subscribeModal">
+			<div class="tw-font-medium tw-text-lg tw-text-center">
+				Please subscribe to use this feature
+				<div class="mt-3">
+					<b-button variant="primary" size="sm">Subscribe now</b-button>
+				</div>
+			</div>
+		</b-modal>
 	</div>
 </template>
 
@@ -82,9 +91,21 @@ export default {
 	mounted() { window.addEventListener('resize', this.onResize) },
 	beforeDestroy() { window.removeEventListener('resize', this.onResize) },
 	computed: {
+		...mapGetters(['$subscribeModal']),
 		...mapGetters('Records', ['$records']),
+		subscribeModal: {
+			get() {
+				return this.$subscribeModal
+			},
+			set(v) {
+				this.toggleSubscribeModal(v)
+			}
+		}
 	},
 	methods: {
+		...mapActions([
+			'toggleSubscribeModal'
+		]),
 		...mapActions('Records', [
 			'setRecords', 'pushCrime',
 			'concatCrimes', 'updateCrime'

@@ -10,8 +10,10 @@ import { state, getters, mutations, actions } from './global.store'
 
 let plugins = [
   createPersistedState({
-    key: "__VUE_BUILDINGS__",
-    paths: ['Auth.isAuth']
+    key: "__crime_map__",
+    paths: [
+      'Auth', 'Map'
+    ]
   })
 ]
 if (_isDev) plugins.push(createLogger())
@@ -23,6 +25,5 @@ const store = new Vuex.Store({
   mutations, actions,
   modules, plugins,
 })
-
 
 export default store

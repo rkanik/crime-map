@@ -85,7 +85,7 @@
 					:key="rad.value"
 					v-for="(rad, radIndex) in radiuses"
 					class="tw-px-5 tw-py-2 tw-text-sm tw-font-medium"
-					@click="radius = rad.value"
+					@click="onChangeRadius(rad.value)"
 					:class="[
 						rad.value === radius
 							?'tw-text-white tw-bg-blue-500'
@@ -102,6 +102,12 @@
 				<template #toggler="{on}">
 					<button
 						v-on="on"
+						v-if="$isSubscribed"
+						class="tw-h-12 tw-w-12 tw-grid tw-place-items-center tw-rounded-md tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-shadow-md"
+					>PSI</button>
+					<button
+						v-else
+						@click="toggleSubscribeModal(true)"
 						class="tw-h-12 tw-w-12 tw-grid tw-place-items-center tw-rounded-md tw-bg-blue-500 tw-bg-opacity-80 tw-text-white tw-shadow-md"
 					>PSI</button>
 				</template>
@@ -235,7 +241,9 @@ export default {
 		},
 	}),
 	created() {
-		this.updateMyLocation({ updateCircle: true })
+		this.updateMyLocation({
+			updateCircle: !this.circle.location.lat
+		})
 		this.myLocationInterval = setInterval(() => {
 			this.updateMyLocation()
 		}, 2000);
@@ -250,7 +258,7 @@ export default {
 		})
 	},
 	computed: {
-		...mapGetters('Auth', ['$user']),
+		...mapGetters('Auth', ['$user', '$isSubscribed']),
 		...mapGetters('Records', ['$records']),
 		...mapGetters('Map', ['$radius', '$circle']),
 		radius: {
@@ -301,6 +309,7 @@ export default {
 		}
 	},
 	methods: {
+		...mapActions(['toggleSubscribeModal']),
 		...mapActions('Map', [
 			'setCircle',
 			'setRadius',
@@ -323,6 +332,12 @@ export default {
 				updatedAt: Date.now(),
 			})
 			return res
+		},
+		onChangeRadius(value) {
+			if (!this.$isSubscribed && value > 2000) {
+				return this.toggleSubscribeModal(true)
+			}
+			this.radius = value
 		},
 		toggleCircleDraggable() {
 			this.circle = {
@@ -406,8 +421,8 @@ export default {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude,
 				}
+				this.mapCenter = { ...this.circle.location }
 				if (updateCircle) {
-					this.mapCenter = { ...this.myLocation }
 					this.circle = {
 						...this.circle,
 						location: this.myLocation

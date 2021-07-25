@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import store from '../store'
 import VueRouter from 'vue-router'
 
 import Home from '../views/Home.vue'
@@ -9,9 +10,10 @@ import Listing from '../views/Listing.vue'
 import About from '../views/About.vue'
 import Profile from '../views/Profile.vue'
 
+import AppLayout from '../layouts/AppLayout.vue'
 import AuthLayout from '../layouts/AuthLayout.vue'
-import AppLayout from '../layouts/AppLaout.vue'
-import store from '../store'
+import DashboardLayout from '../layouts/DashboardLayout.vue'
+
 
 Vue.use(VueRouter)
 
@@ -74,6 +76,32 @@ const router = new VueRouter({
           name: 'About',
           component: About
         },
+      ]
+    },
+    {
+      path: '/admin',
+      component: DashboardLayout,
+      redirect: '/admin/crimes',
+      meta: {
+        requiresAuth: true,
+        requireRoles: ['admin']
+      },
+      children: [
+        // {
+        //   path: '',
+        //   name: 'Dashboard',
+        //   component: () => import(`@/views/Dashboard.vue`)
+        // },
+        {
+          path: 'crimes',
+          name: 'Crimes',
+          component: () => import(`@/views/dashboard/Crimes.vue`)
+        },
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import(`@/views/dashboard/Users.vue`)
+        }
       ]
     },
   ]

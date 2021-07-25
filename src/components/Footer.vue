@@ -32,6 +32,7 @@
 		</router-link>
 		<div class="tw-w-16">
 			<button
+				@click="onClickSOS"
 				class="tw-w-16 tw-h-16 tw-rounded-full tw-overflow-hidden tw-transform tw--translate-y-4 tw-scale-90"
 			>
 				<img
@@ -73,15 +74,22 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from 'vuex';
 export default {
 	name: 'Footer',
 	computed: {
+		...mapGetters('Auth', ['$isSubscribed']),
 		currentRouteName() {
 			return this.$route.name;
+		}
+	},
+	methods: {
+		...mapActions(['toggleSubscribeModal']),
+		onClickSOS() {
+			if (!this.$isSubscribed) {
+				this.toggleSubscribeModal(true)
+			}
 		}
 	}
 }
 </script>
-
-<style lang="scss">
-</style>

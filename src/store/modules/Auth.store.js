@@ -13,6 +13,10 @@ const mutations = createMutations('SET', 'RESET')
 const getters = {
 	$user: ({ user }) => user,
 	$isAuth: ({ isAuth }) => isAuth,
+	$isSubscribed: state => (
+		state.user.role === 'admin' ||
+		state.user.isSubscribed === true
+	)
 }
 
 const actions = {
