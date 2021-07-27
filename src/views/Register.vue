@@ -12,9 +12,14 @@
 				<input type="text" v-model="user.name" class="form-control" placeholder="Name" required />
 			</div>
 			<br />
-			<div class="form-group">
+			<!-- <div class="form-group">
 				<label for>Age</label>
 				<input type="text" v-model="user.age" class="form-control" placeholder="Age" required />
+			</div>-->
+			<div class="form-group">
+				<label for>Date of Birth</label>
+				<b-form-datepicker required locale="en" v-model="user.dob"></b-form-datepicker>
+				<!-- min="2010-07-01" -->
 			</div>
 			<br />
 			<div class="form-group">
@@ -71,10 +76,10 @@ export default {
 		return {
 			user: {
 				name: '',
-				age: '',
 				gender: '',
 				phoneNumber: '',
 				email: '',
+				dob: '',
 				role: 'user',
 				homeAddress: '',
 				password: '',

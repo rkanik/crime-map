@@ -9,10 +9,10 @@
 			@click="hideInfo"
 			:style="{
 				featureType: 'poi',
-        elementType: 'labels',
-        stylers: [
-          { visibility: 'off' }
-        ]
+				elementType: 'labels',
+				stylers: [
+					{ visibility: 'off' }
+				]
 			}"
 			:options="{
 				zoomControl: false,
@@ -184,7 +184,7 @@ import CreateRecordDialog from '@/components/CreateRecordDialog'
 import MapTypes from '../components/MapTypes.vue'
 import Menu from '../components/utils/Menu.vue'
 import { only } from '../helpers'
-import { _time } from '../consts'
+import { _nigeriaBounds, _time } from '../consts'
 import crimes from '@/data.json'
 
 const initialZoom = 13
@@ -212,7 +212,7 @@ export default {
 		psiMenu: false,
 
 		// STRINGS
-		mapType: 'terrain',
+		mapType: 'roadmap',
 
 		// NUMBERS
 		zoom: initialZoom,
@@ -254,6 +254,10 @@ export default {
 	mounted() {
 		this.$refs.mapRef.$mapPromise.then(map => {
 			this.map = map
+			this.map.setRestriction({
+				latLngBounds: _nigeriaBounds,
+				strictBounds: false,
+			})
 			this.infoWindow = new window.google.maps.InfoWindow();
 		})
 	},

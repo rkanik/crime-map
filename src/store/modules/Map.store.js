@@ -1,7 +1,7 @@
 import { createMutations } from '../store.helpers'
 
 const initialRadius = 2000
-const iLatLng = () => ({ lat: 0, lng: 0 })
+const iLatLng = () => ({ lat: 9.123580, lng: 7.540008 })
 
 const initalState = () => ({
 	radius: initialRadius,

@@ -1,7 +1,9 @@
 export const searchPlaces = (map, lat, lng, radius, keyword) => {
 	return new Promise(resolve => {
 		const request = {
-			radius, query: keyword,
+			radius, 
+			query: keyword,
+			bounds: map.getBounds(),
 			location: new window.google.maps.LatLng(lat, lng),
 		};
 		const service = new window.google.maps.places.PlacesService(map);

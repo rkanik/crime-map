@@ -15,6 +15,10 @@ export const _crime = {
 	violent: 1,
 	nonViolent: 3
 }
+export const _nigeriaBounds = {
+	north: 13.89, south: 4.15,
+	west: 2.69, east: 14.67,
+}
 export const _time = (() => {
 	let sec = 1000
 	let min = sec * 60

@@ -20,7 +20,7 @@ export default {
 	},
 	data: () => ({
 		types: [
-			{ id: 'terrain', icon: require('@/assets/img/terrain.png') },
+			{ id: 'roadmap', icon: require('@/assets/img/default-map-type.png') },
 			{ id: 'satellite', icon: require('@/assets/img/satellite.png') },
 		]
 	}),

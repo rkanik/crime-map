@@ -1,7 +1,9 @@
 export const fetchNearbyLocations = (map, lat, lng, radius, type) => {
 	return new Promise(resolve => {
 		const request = {
-			type, radius, openNow: false,
+			type, radius,
+			openNow: false,
+			bounds: map.getBounds(),
 			location: new window.google.maps.LatLng(lat, lng),
 		};
 		const service = new window.google.maps.places.PlacesService(map);
