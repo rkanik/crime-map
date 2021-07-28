@@ -250,15 +250,23 @@ export default {
 	},
 	beforeDestroy() {
 		clearInterval(this.myLocationInterval)
+		window.history.replaceState({}, document.title, location.pathname);
 	},
 	mounted() {
 		this.$refs.mapRef.$mapPromise.then(map => {
 			this.map = map
-			this.map.setRestriction({
-				latLngBounds: _nigeriaBounds,
-				strictBounds: false,
-			})
+			console.log(_nigeriaBounds)
+			// this.map.setRestriction({
+			// 	latLngBounds: _nigeriaBounds,
+			// 	strictBounds: false,
+			// })
 			this.infoWindow = new window.google.maps.InfoWindow();
+
+			if (this.$route.query.center) {
+				let [lat, lng] = this.$route.query.center.split(',')
+				if (!lat || !lng) return
+				this.onSelectPlace({ lat: +lat, lng: +lng })
+			}
 		})
 	},
 	computed: {
@@ -384,11 +392,11 @@ export default {
 			return Math.sqrt(dx * dx + dy * dy) <= (radius / 1000);
 		},
 		latLngToNumber({ lat, lng }) {
+			if (typeof lat !== 'function') return { lat, lng }
 			return { lat: lat(), lng: lng() }
 		},
 		onSelectPlace(e) {
 			const latLng = this.latLngToNumber(e)
-
 
 			this.zoom = initialZoom
 			this.map.setZoom(this.zoom)

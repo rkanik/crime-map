@@ -5,7 +5,7 @@
 				<router-view />
 			</route-wrapper>
 		</main>
-		<Footer class="tw-flex-none" />
+		<Footer class="tw-flex-none" @sos="onClickSoS" />
 	</div>
 </template>
 
@@ -17,6 +17,21 @@ export default {
 	components: {
 		Footer,
 		RouteWrapper
+	},
+	methods: {
+		async onClickSoS() {
+			navigator.geolocation.getCurrentPosition(position => {
+				const { latitude, longitude } = position.coords
+				navigator.share({
+					title: '[Crime Map] Crime occuring in my location',
+					url: `${location.origin}/home?center=${latitude},${longitude}`,
+				})
+					.catch(err => {
+						console.log('Share cancelled', err)
+					})
+			})
+
+		},
 	}
 }
 </script>

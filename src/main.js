@@ -19,6 +19,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 // Google Map
 import { _googleMapApiKey } from './consts'
 import * as VueGoogleMaps from 'vue2-google-maps'
+import './registerServiceWorker'
 
 // Plugins
 Vue.use(BootstrapVue)

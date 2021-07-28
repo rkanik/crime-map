@@ -87,8 +87,9 @@ export default {
 		...mapActions(['toggleSubscribeModal']),
 		onClickSOS() {
 			if (!this.$isSubscribed) {
-				this.toggleSubscribeModal(true)
+				return this.toggleSubscribeModal(true)
 			}
+			this.$emit('sos')
 		}
 	}
 }
