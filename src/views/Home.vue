@@ -255,11 +255,11 @@ export default {
 	mounted() {
 		this.$refs.mapRef.$mapPromise.then(map => {
 			this.map = map
-			console.log(_nigeriaBounds)
-			// this.map.setRestriction({
-			// 	latLngBounds: _nigeriaBounds,
-			// 	strictBounds: false,
-			// })
+			// console.log(_nigeriaBounds)
+			this.map.setRestriction({
+				latLngBounds: _nigeriaBounds,
+				strictBounds: false,
+			})
 			this.infoWindow = new window.google.maps.InfoWindow();
 
 			if (this.$route.query.center) {
